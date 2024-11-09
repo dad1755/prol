@@ -1,29 +1,18 @@
 import streamlit as st
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import hashlib
-import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-# Set up Google Sheets API connection using credentials
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)  # Replace with your creds file
-client = gspread.authorize(creds)
+# Create a connection object to Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Open the Google Sheet by URL
-sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1xoqqUuT716BOtWewzbMQHWU8BS8Hn76P8W3IguQHFh0/edit?usp=sharing")
-user_sheet = sheet.worksheet("user")  # Specify the sheet name
-
-# Fetch all records from the 'user' sheet
-records = user_sheet.get_all_records()
-
-# Convert the records to a pandas DataFrame
-df = pd.DataFrame(records)
+# Read the data from the "user" sheet
+df = conn.read(sheet="user")
 
 # Function to hash the password for storage
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# Check if the user is admin
+# Function to check if the user is admin
 def is_admin(username, password):
     return username == "admin" and password == "admin_pass"
 
@@ -75,7 +64,7 @@ def admin_page():
                     df = df.append(new_user, ignore_index=True)
                     
                     # Write the updated dataframe back to the sheet
-                    user_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+                    conn.write(df)
                     
                     st.success(f"User {new_username} created successfully")
             else:
