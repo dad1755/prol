@@ -6,8 +6,8 @@ import hashlib
 # Create a connection object to connect to Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Read the data from the "user" sheet (replace "user" with the correct sheet name if needed)
-df = conn.read(sheet="user")
+# Read data from the first sheet (by default)
+df = conn.read()
 
 # Function to hash the password for storage
 def hash_password(password):
@@ -64,8 +64,8 @@ def admin_page():
                     new_user = {"Username": new_username, "Password": hash_password(new_password)}
                     df = df.append(new_user, ignore_index=True)
                     
-                    # Write the updated dataframe back to the "user" sheet
-                    conn.write(df, sheet="user")
+                    # Write the updated dataframe back to the sheet
+                    conn.write(df)
                     
                     st.success(f"User {new_username} created successfully")
             else:
@@ -89,4 +89,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
